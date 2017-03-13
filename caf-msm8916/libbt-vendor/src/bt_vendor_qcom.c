@@ -1336,6 +1336,9 @@ static void ssr_cleanup(int reason)
     unsigned char trig_ssr = 0xEE;
 
     ALOGI("++%s", __FUNCTION__);
+#ifndef ENABLE_ANT
+    (void)reason;  // unused
+#endif
 
     pthread_mutex_lock(&q_lock);
     if (!q) {
