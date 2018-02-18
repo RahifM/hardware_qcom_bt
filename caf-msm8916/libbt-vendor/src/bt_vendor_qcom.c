@@ -193,7 +193,7 @@ static int get_bt_soc_type()
     ALOGI("bt-vendor : get_bt_soc_type");
 
     ret = property_get("qcom.bluetooth.soc", bt_soc_type, NULL);
-    if (ret != 0) {
+    if (ret >= 0) {
         ALOGI("qcom.bluetooth.soc set to %s\n", bt_soc_type);
         if (!strncasecmp(bt_soc_type, "rome", sizeof("rome"))) {
             return BT_SOC_ROME;
@@ -940,18 +940,14 @@ userial_open:
                                     ALOGV("BD address read from Boot property: %s\n", bd_addr);
                                     tok =  strtok(bd_addr, ":");
                                     while (tok != NULL) {
-                                        ALOGV("bd add [%d]: %d ", i, strtol(tok, NULL, 16));
+                                        ALOGV("bd add [%d]: %ld ", i, strtol(tok, NULL, 16));
                                         if (i>=6) {
                                             ALOGE("bd property of invalid length");
                                             ignore_boot_prop = TRUE;
                                             break;
                                         }
-                                        if (i == 6 && !ignore_boot_prop) {
-                                            ALOGV("Valid BD address read from prop");
-                                            memcpy(q->bdaddr, local_bd_addr_from_prop, sizeof(vnd_local_bd_addr));
-                                            ignore_boot_prop = FALSE;
-                                        } else {
-                                            ALOGE("There are not enough tokens in BD addr");
+                                        if (!validate_tok(tok)) {
+                                            ALOGE("Invalid token in BD address");
                                             ignore_boot_prop = TRUE;
                                             break;
                                         }
@@ -961,7 +957,7 @@ userial_open:
                                     }
                                     if (i == 6 && !ignore_boot_prop) {
                                         ALOGV("Valid BD address read from prop");
-                                        memcpy(vnd_local_bd_addr, local_bd_addr_from_prop, sizeof(vnd_local_bd_addr));
+                                        memcpy(q->bdaddr, local_bd_addr_from_prop, sizeof(q->bdaddr));
                                         ignore_boot_prop = FALSE;
                                     } else {
                                         ALOGE("There are not enough tokens in BD addr");
@@ -973,12 +969,14 @@ userial_open:
                                      ignore_boot_prop = TRUE;
                                 }
 #endif //READ_BT_ADDR_FROM_PROP
+#ifdef BT_NV_SUPPORT
                                     /* Always read BD address from NV file */
                                 if(ignore_boot_prop && !bt_vendor_nv_read(1, q->bdaddr))
                                 {
                                    /* Since the BD address is configured in boot time We should not be here */
                                    ALOGI("Failed to read BD address. Use the one from bluedroid stack/ftm");
                                 }
+#endif
                                 if(rome_soc_init(fd, (char*)q->bdaddr)<0) {
                                     retval = -1;
                                 } else {
