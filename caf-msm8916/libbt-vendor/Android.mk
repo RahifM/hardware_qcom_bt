@@ -30,23 +30,26 @@ LOCAL_SRC_FILES := \
         src/hw_ar3k.c \
         src/bt_vendor_persist.cpp
 
-ifeq ($(QCOM_BT_USE_SIBS),true)
-LOCAL_CFLAGS += -DQCOM_BT_SIBS_ENABLE
-endif
-
-ifeq ($(BOARD_HAS_QCA_BT_ROME),true)
-LOCAL_CFLAGS += -DBT_SOC_TYPE_ROME
+# By default, "ENABLE_FM_OVER_UART" is un-defined.
+# To enable the feature, set it as "true" in "BoardConfig.mk".
+ifeq ($(ENABLE_FM_OVER_UART), true)
+LOCAL_CFLAGS := -DFM_OVER_UART
 endif
 
 ifneq (,$(filter userdebug eng,$(TARGET_BUILD_VARIANT)))
 LOCAL_CFLAGS += -DPANIC_ON_SOC_CRASH
+LOCAL_CFLAGS += -DENABLE_DBG_FLAGS
 endif
 
 LOCAL_C_INCLUDES += \
         $(LOCAL_PATH)/include \
         external/bluetooth/bluedroid/hci/include \
         system/bt/hci/include \
-        $(TARGET_OUT_HEADERS)/bt/hci_qcomm_init
+        $(TARGET_OUT_HEADERS)/bt/hci_qcomm_init \
+        $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr/include
+
+LOCAL_ADDITIONAL_DEPENDENCIES += \
+$(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr
 
 ifeq ($(BOARD_HAS_QCA_BT_AR3002), true)
 LOCAL_C_FLAGS := \
@@ -59,10 +62,10 @@ endif #WIFI_BT_STATUS_SYNC
 
 LOCAL_SHARED_LIBRARIES := \
         libcutils \
-        liblog
+        liblog \
+        libbtnv
 
 LOCAL_MODULE := libbt-vendor
-LOCAL_CLANG := false
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE_CLASS := SHARED_LIBRARIES
 LOCAL_MODULE_OWNER := qcom
@@ -74,15 +77,7 @@ else
 LOCAL_MODULE_PATH := $(TARGET_OUT_VENDOR_SHARED_LIBRARIES)
 endif
 
-ifeq ($(QCOM_BT_USE_BTNV),true)
 LOCAL_CFLAGS += -DBT_NV_SUPPORT
-ifeq ($(QCPATH),)
-LOCAL_SHARED_LIBRARIES += libdl
-LOCAL_CFLAGS += -DBT_NV_SUPPORT_DL
-else
-LOCAL_SHARED_LIBRARIES += libbtnv
-endif
-endif
 
 ifneq ($(BOARD_ANT_WIRELESS_DEVICE),)
 LOCAL_CFLAGS += -DENABLE_ANT
