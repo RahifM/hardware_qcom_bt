@@ -95,7 +95,7 @@ endif
 
 LOCAL_CFLAGS += \
       -Wall \
-      -Werror \
+      -Wno-error \
       -Wno-error=user-defined-warnings \
       -Wno-incompatible-pointer-types-discards-qualifiers \
       -Wno-unused-function \
