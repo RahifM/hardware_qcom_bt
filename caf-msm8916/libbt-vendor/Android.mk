@@ -20,7 +20,8 @@ ifeq ($(BOARD_HAVE_BLUETOOTH_QCOM),true)
 
 include $(CLEAR_VARS)
 
-
+#logging headers
+LOCAL_HEADER_LIBRARIES := libutils_headers
 LOCAL_SRC_FILES := \
         src/bt_vendor_qcom.c \
         src/hardware.c \
@@ -44,7 +45,7 @@ endif
 LOCAL_C_INCLUDES += \
         $(LOCAL_PATH)/include \
         external/bluetooth/bluedroid/hci/include \
-        system/bt/hci/include \
+        vendor/qcom/opensource/commonsys/system/bt/hci/include \
         $(TARGET_OUT_HEADERS)/bt/hci_qcomm_init \
         $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr/include
 
@@ -62,7 +63,8 @@ endif #WIFI_BT_STATUS_SYNC
 
 LOCAL_SHARED_LIBRARIES := \
         libcutils \
-        liblog
+        liblog \
+        libbtnv
 
 LOCAL_MODULE := libbt-vendor
 LOCAL_MODULE_TAGS := optional
@@ -76,31 +78,19 @@ else
 LOCAL_MODULE_PATH := $(TARGET_OUT_VENDOR_SHARED_LIBRARIES)
 endif
 
-ifeq ($(QCOM_BT_USE_BTNV),true)
 LOCAL_CFLAGS += -DBT_NV_SUPPORT
-ifeq ($(QCPATH),)
-LOCAL_SHARED_LIBRARIES += libdl
-LOCAL_CFLAGS += -DBT_NV_SUPPORT_DL
-else
-LOCAL_SHARED_LIBRARIES += libbtnv
-endif
-endif
+LOCAL_CFLAGS += -Wno-unused-variable
+LOCAL_CFLAGS += -Wno-unused-label
+LOCAL_CFLAGS += -Wno-user-defined-warnings
+LOCAL_CFLAGS += -Wno-unused-parameter
+LOCAL_CFLAGS += -Wno-incompatible-pointer-types-discards-qualifiers
+LOCAL_CFLAGS += -Wno-unused-function
+LOCAL_CFLAGS += -Wno-enum-conversion
 
 ifneq ($(BOARD_ANT_WIRELESS_DEVICE),)
 LOCAL_CFLAGS += -DENABLE_ANT
 endif
-ifeq ($(QCOM_BT_READ_ADDR_FROM_PROP),true)
-LOCAL_CFLAGS += -DREAD_BT_ADDR_FROM_PROP
-endif
-
-LOCAL_CFLAGS += \
-      -Wall \
-      -Wno-error \
-      -Wno-error=user-defined-warnings \
-      -Wno-incompatible-pointer-types-discards-qualifiers \
-      -Wno-unused-function \
-      -Wno-unused-label \
-      -Wno-unused-variable \
+#LOCAL_CFLAGS += -DREAD_BT_ADDR_FROM_PROP
 
 #include $(LOCAL_PATH)/vnd_buildcfg.mk
 
